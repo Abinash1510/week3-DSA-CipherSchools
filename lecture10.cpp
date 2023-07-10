@@ -3,127 +3,221 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-const int ALPHABET_SIZE = 26;
+#define ALPHABET_SIZE 256
 
-struct TrieNode {
-	struct TrieNode* children[ALPHABET_SIZE];
-	bool isEndOfWord;
+class TrieNode
+{
+  public:
+    bool IsWord;
+    TrieNode *Children[ALPHABET_SIZE];
+    TrieNode()
+    {
+        this->IsWord = false;
+        for (int i = 0; i < ALPHABET_SIZE; i++)
+        {
+            this->Children[i] = NULL;
+        }
+    }
 };
 
-struct TrieNode* getNode(void)
+class Trie
 {
-	struct TrieNode* pNode = new TrieNode;
+    TrieNode *root;
 
-	pNode->isEndOfWord = false;
+  public:
+    Trie()
+    {
+        root = new TrieNode();
+    }
 
-	for (int i = 0; i < ALPHABET_SIZE; i++)
-		pNode->children[i] = NULL;
+    void Insert(string str)
+    {
+        TrieNode *crawler = this->root;
+        for (int i = 0; i < str.size(); i++)
+        {
+            if (!crawler->Children[int(str[i])])
+            {
+                crawler->Children[int(str[i])] = new TrieNode();
+            }
+            crawler = crawler->Children[int(str[i])];
+        }
+        crawler->IsWord = true;
+    }
 
-	return pNode;
-}
+    bool Search(string str)
+    {
+        TrieNode *crawler = this->root;
+        for (int i = 0; i < str.size(); i++)
+        {
+            if (!crawler->Children[int(str[i])])
+            {
+                return false;
+            }
+            crawler = crawler->Children[int(str[i])];
+        }
+        return (crawler->IsWord == true);
+    }
 
-void insert(struct TrieNode* root, string key)
-{
-	struct TrieNode* pCrawl = root;
+    bool IsLeaf(TrieNode *crawler)
+    {
+        for (int i = 0; i < ALPHABET_SIZE; i++)
+        {
+            if (crawler->Children[i])
+                return false;
+        }
+        return true;
+    }
 
-	for (int i = 0; i < key.length(); i++) {
-		int index = key[i] - 'a';
-		if (!pCrawl->children[index])
-			pCrawl->children[index] = getNode();
+    bool RemoveUtil(TrieNode *crawler, string &str, int curr, int len)
+    {
+        if (crawler)
+        {
+            if (curr == len)
+            {
+                crawler->IsWord = false;
+                if (this->IsLeaf(crawler))
+                    return true;
+                return false;
+            }
+            else
+            {
+                if (RemoveUtil(crawler->Children[int(str[curr])], str, curr + 1, len))
+                {
+                    delete (crawler->Children[int(str[curr])]);
+                    return (this->IsLeaf(crawler) && !crawler->IsWord);
+                }
+            }
+        }
+        return false;
+    }
 
-		pCrawl = pCrawl->children[index];
-	}
+    void Remove(string str)
+    {
+        TrieNode *crawler = this->root;
+        this->RemoveUtil(crawler, str, 0, str.size());
+    }
 
-	pCrawl->isEndOfWord = true;
-}
+    void PrintDictionaryHelper(TrieNode *crawler, string & str)
+    {
+        if (crawler)
+        {
+            if (crawler->IsWord)
+            {
+                cout << str << "\n";
+            }
 
-bool search(struct TrieNode* root, string key)
-{
-	struct TrieNode* pCrawl = root;
+            for (int i = 0; i < ALPHABET_SIZE; i++)
+            {
+                if (crawler->Children[i])
+                {
+                    str += char(i);
+                    PrintDictionaryHelper(crawler->Children[i], str);
+                    str = str.substr(0, str.size() - 1);
+                }
+            }
+        }
+    }
 
-	for (int i = 0; i < key.length(); i++) {
-		int index = key[i] - 'a';
-		if (!pCrawl->children[index])
-			return false;
-
-		pCrawl = pCrawl->children[index];
-	}
-
-	return (pCrawl != NULL && pCrawl->isEndOfWord);
-}
-
-bool isEmpty(TrieNode* root)
-{
-	for (int i = 0; i < ALPHABET_SIZE; i++)
-		if (root->children[i])
-			return false;
-	return true;
-}
-
-TrieNode* remove(TrieNode* root, string key, int depth = 0)
-{
-	if (!root)
-		return NULL;
-
-	if (depth == key.size()) {
-
-		if (root->isEndOfWord)
-			root->isEndOfWord = false;
-
-		if (isEmpty(root)) {
-			delete (root);
-			root = NULL;
-		}
-
-		return root;
-	}
-
-	int index = key[depth] - 'a';
-	root->children[index] =
-		remove(root->children[index], key, depth + 1);
-
-	if (isEmpty(root) && root->isEndOfWord == false) {
-		delete (root);
-		root = NULL;
-	}
-
-	return root;
-}
+    void PrintDictionary()
+    {
+        TrieNode *crawler = this->root;
+        string str = "";
+        PrintDictionaryHelper(crawler, str);
+    }
+};
 
 int main()
 {
-	string keys[] = { "the", "a", "there",
-					"answer", "any", "by",
-					"bye", "their", "hero", "heroplane" };
-	int n = sizeof(keys) / sizeof(keys[0]);
-
-	struct TrieNode* root = getNode();
-	for (int i = 0; i < n; i++)
-		insert(root, keys[i]);
-
-	search(root, "the") ? cout << "Yes\n" : cout << "No\n";
-	search(root, "these") ? cout << "Yes\n" : cout << "No\n";
-
-	remove(root, "heroplane");
-	search(root, "hero") ? cout << "Yes\n" : cout << "No\n";
-	return 0;
+    Trie trie;
+    trie.Insert("DOG");
+    trie.Insert("CAT");
+    trie.Insert("DO");
+    trie.PrintDictionary();
+    trie.Remove("DOG");
+    trie.PrintDictionary();
 }
+
+
+
+
 
 
 
 
 
 // disjoint 
-#include<bits/stdc++.h>
+#include <bits/stdc++.h>
 using namespace std;
 
-int find(int i){
-	if (parent[i] == i) 	return i;
-	else 	return find(parent[i]);
-}
+// Naive Implementation
+class DisjointSet
+{
+    int *parent;
+    int N;
 
-void union(int i, int j) {
-	int irep = this.Find(i),
-	int jrep = this.Find(j);
-	this.Parent[irep] = jrep;
-}
+public:
+    DisjointSet(int N)
+    {
+        this->N = N;
+        this->parent = new int[this->N];
+        for (int i = 0; i < N; i++)
+            this->parent[i] = i;
+    }
+
+    //returns true,if A and B are connected, else it will return false.
+    bool Find(int A, int B)
+    {
+        return (this->parent[A] == this->parent[B]);
+    }
+
+    void Union(int A, int B)
+    {
+        int temp = this->parent[A];
+        for (int i = 0; i < this->N; i++)
+        {
+            if (this->parent[i] == temp)
+                this->parent[i] = this->parent[B];
+        }
+    }
+};
+
+class OptimizedDisjointSet
+{
+    int *parent, *_size;
+    int N;
+
+public:
+    OptimizedDisjointSet(int N)
+    {
+        this->N = N;
+        parent = new int[this->N + 1];
+        _size = new int[this->N + 1];
+        for (int i = 1; i <= N; i++)
+        {
+            parent[i] = i;
+            _size[i] = 1;
+        }
+    }
+
+    void Union(int a, int b)
+    {
+        a = Find(a);
+        b = Find(b);
+
+        if (_size[a] > _size[b])
+            swap(a, b);
+
+        if (a != b)
+        {
+            parent[a] = b;
+            _size[b] += _size[a];
+        }
+    }
+
+    int Find(int a)
+    {
+        if (a != parent[a])
+            parent[a] = Find(parent[a]);
+        return parent[a];
+    }
+};
